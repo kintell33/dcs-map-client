@@ -1,11 +1,14 @@
 <html>
 
-<body onload="drawMap()">
-    <div id="mapdiv"></div>
+<body onload="drawMap()" style="background-color: black;">
+    <div id="status" style="position:absolute;z-index: 2;width: 99%; text-align: right;display: none;">
+        <img src="./public/connect.gif" alt="status_connected" style="width: 21px;height: 21px;margin-right: 30px;margin-top: 10px;">
+    </div>
+    <div id="mapdiv" style="margin:0" style="z-index: 1;"></div>
     <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
     <script>
         var map = new OpenLayers.Map("mapdiv");
-
+        console.log(map);
         function drawMap() {
             map.addLayer(new OpenLayers.Layer.OSM());
             var lonLat = new OpenLayers.LonLat('42.182631945819', '42.4655876107')
@@ -14,10 +17,19 @@
                     map.getProjectionObject()
                 );
 
-            var zoom = 1;
+            var zoom = 0;
             map.setCenter(lonLat, zoom);
             var markers = new OpenLayers.Layer.Markers("Markers");
             map.addLayer(markers);
+            document.getElementById('mapdiv').style.filter="invert(100%)";
+
+            addMarker('42.182631945100', '42.4655876100', 'allies');
+
+            addMarker('42.282631945200', '42.5655876200', 'misile');
+
+            addMarker('42.382631945300', '42.6655876300', 'enemies');
+
+            addMarker('42.482631945400', '42.7655876400', 'plane');
         }
 
         function clearMarkers() {
@@ -58,6 +70,7 @@
         function socketOpenConnection(e) {
             socket.send("listen"); //send listen to connect to the ws and recive game information
             console.log('Connected to WS');
+            document.getElementById('status').style.display = '';
         };
 
         function socketOnCloseConnection(event) {
