@@ -1,0 +1,93 @@
+<html>
+
+<body onload="drawMap()">
+    <div id="mapdiv"></div>
+    <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+    <script>
+        var map = new OpenLayers.Map("mapdiv");
+
+        function drawMap() {
+            map.addLayer(new OpenLayers.Layer.OSM());
+            var lonLat = new OpenLayers.LonLat('42.182631945819', '42.4655876107')
+                .transform(
+                    new OpenLayers.Projection("EPSG:4326"),
+                    map.getProjectionObject()
+                );
+
+            var zoom = 1;
+            map.setCenter(lonLat, zoom);
+            var markers = new OpenLayers.Layer.Markers("Markers");
+            map.addLayer(markers);
+        }
+
+        function clearMarkers() {
+            map.layers.filter((layer) => {
+                if (layer.name == 'Markers') {
+                    layer.clearMarkers();
+                }
+            });
+
+        }
+
+        function getIcon(type) {
+            if (type === '-') { return null; }
+            let size = new OpenLayers.Size(21, 21);
+            let offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
+            let icon = new OpenLayers.Icon(`./public/${type}.png`, size, offset);
+            return icon;
+        }
+
+        function addMarker(latitude, longitude, type) {
+            var lonLat = new OpenLayers.LonLat(longitude, latitude)
+                .transform(
+                    new OpenLayers.Projection("EPSG:4326"),
+                    map.getProjectionObject()
+                );
+            map.layers.filter((layer) => {
+                if (layer.name == 'Markers') {
+                    layer.addMarker(new OpenLayers.Marker(lonLat, getIcon(type)));
+                }
+            });
+        }
+
+        var socket = new WebSocket(getQueryparam('server'));
+        socket.onopen = socketOpenConnection;
+        socket.onclose = socketOnCloseConnection;
+        socket.onmessage = socketOnMessage;
+
+        function socketOpenConnection(e) {
+            socket.send("listen"); //send listen to connect to the ws and recive game information
+            console.log('Connected to WS');
+        };
+
+        function socketOnCloseConnection(event) {
+            console.log('Diconnected from WS');
+        };
+
+        function socketOnMessage(event) {
+            if (typeof event.data === 'object') {
+                event.data.text().then((data) => {
+                    clearMarkers();
+                    getJson(data).forEach(element => {
+                        console.log(element);
+                        addMarker(element.latitude, element.longitude, element.type);
+                    });
+                });
+            }
+        }
+
+        function getQueryparam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const myParam = urlParams.get(param);
+            return myParam;
+        }
+
+        function getJson(message) {
+            let dataMessage = message.replace("b'", ""); //replace de "b" for the bytes
+            let json = JSON.parse(dataMessage);
+            return json;
+        }
+    </script>
+</body>
+
+</html>
