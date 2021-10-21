@@ -74,7 +74,6 @@
                 event.data.text().then((data) => {
                     clearMarkers();
                     getJson(data).forEach(element => {
-                        console.log(element);
                         addMarker(element.latitude, element.longitude, element.type);
                     });
                 });
